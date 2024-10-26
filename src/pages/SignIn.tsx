@@ -14,6 +14,10 @@ import MuiCard from '@mui/material/Card';
 import { styled } from '@mui/material/styles';
 import ForgotPassword from '../components/SignIn/ForgotPassword';
 
+import { useNavigate } from 'react-router-dom';
+
+import { login } from "../services/AuthService"
+
 const Card = styled(MuiCard)(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
@@ -57,6 +61,9 @@ const SignInContainer = styled(Stack)(({ theme }) => ({
 }));
 
 export default function SignIn(props: { disableCustomTheme?: boolean }) {
+
+  const navigate = useNavigate();
+
   const [emailError, setEmailError] = React.useState(false);
   const [emailErrorMessage, setEmailErrorMessage] = React.useState('');
   const [passwordError, setPasswordError] = React.useState(false);
@@ -71,17 +78,36 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
     setOpen(false);
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault(); // Prevents form submission refresh
+
     if (emailError || passwordError) {
-      event.preventDefault();
-      return;
+      return; // Exits early if there are errors
     }
+
     const data = new FormData(event.currentTarget);
+    const email = String(data.get('email') || ''); // Ensures a string type
+    const password = String(data.get('password') || '');
+
     console.log({
-      email: data.get('email'),
-      password: data.get('password'),
+      email,
+      password,
     });
+
+    try {
+      const response = await login({
+        email,
+        password,
+      });
+      console.log('Logged in user:', response);
+      if(response.token){
+        navigate("/home")
+      }
+    } catch (error) {
+      console.error(error); // The global handler logs detailed info
+    }
   };
+
 
   const validateInputs = () => {
     const email = document.getElementById('email') as HTMLInputElement;
@@ -115,7 +141,6 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
       <CssBaseline enableColorScheme />
       <SignInContainer direction="column" justifyContent="space-between">
         <Card variant="outlined">
-          {/* <SitemarkIcon /> */}
           <Typography
             component="h1"
             variant="h4"
@@ -206,7 +231,7 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
               </span>
             </Typography>
           </Box>
-          
+
         </Card>
       </SignInContainer>
     </>
