@@ -13,6 +13,9 @@ import Stack from '@mui/material/Stack';
 import MuiCard from '@mui/material/Card';
 import { styled } from '@mui/material/styles';
 
+
+import { useNavigate } from 'react-router-dom';
+
 const Card = styled(MuiCard)(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
@@ -193,7 +196,7 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
               Already have an account?{' '}
               <span>
                 <Link
-                  href="/sign-in/"
+                  href="/"
                   variant="body2"
                   sx={{ alignSelf: 'center' }}
                 >
