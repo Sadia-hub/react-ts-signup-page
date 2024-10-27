@@ -13,10 +13,12 @@ import Stack from '@mui/material/Stack';
 import MuiCard from '@mui/material/Card';
 import { styled } from '@mui/material/styles';
 import ForgotPassword from '../components/SignIn/ForgotPassword';
-
 import { useNavigate } from 'react-router-dom';
+import { AxiosError } from 'axios';
 
-import { login } from "../services/AuthService"
+import { ErrorResponse } from '../types/types';
+
+import { login } from "../services/AuthService";
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: 'flex',
@@ -29,11 +31,9 @@ const Card = styled(MuiCard)(({ theme }) => ({
   [theme.breakpoints.up('sm')]: {
     maxWidth: '450px',
   },
-  boxShadow:
-    'hsla(220, 30%, 5%, 0.05) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.05) 0px 15px 35px -5px',
+  boxShadow: 'hsla(220, 30%, 5%, 0.05) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.05) 0px 15px 35px -5px',
   ...theme.applyStyles('dark', {
-    boxShadow:
-      'hsla(220, 30%, 5%, 0.5) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.08) 0px 15px 35px -5px',
+    boxShadow: 'hsla(220, 30%, 5%, 0.5) 0px 5px 15px 0px, hsla(220, 25%, 10%, 0.08) 0px 15px 35px -5px',
   }),
 }));
 
@@ -50,25 +50,22 @@ const SignInContainer = styled(Stack)(({ theme }) => ({
     position: 'absolute',
     zIndex: -1,
     inset: 0,
-    backgroundImage:
-      'radial-gradient(ellipse at 50% 50%, hsl(210, 100%, 97%), hsl(0, 0%, 100%))',
+    backgroundImage: 'radial-gradient(ellipse at 50% 50%, hsl(210, 100%, 97%), hsl(0, 0%, 100%))',
     backgroundRepeat: 'no-repeat',
     ...theme.applyStyles('dark', {
-      backgroundImage:
-        'radial-gradient(at 50% 50%, hsla(210, 100%, 16%, 0.5), hsl(220, 30%, 5%))',
+      backgroundImage: 'radial-gradient(at 50% 50%, hsla(210, 100%, 16%, 0.5), hsl(220, 30%, 5%))',
     }),
   },
 }));
 
 export default function SignIn(props: { disableCustomTheme?: boolean }) {
-
   const navigate = useNavigate();
-
   const [emailError, setEmailError] = React.useState(false);
   const [emailErrorMessage, setEmailErrorMessage] = React.useState('');
   const [passwordError, setPasswordError] = React.useState(false);
   const [passwordErrorMessage, setPasswordErrorMessage] = React.useState('');
   const [open, setOpen] = React.useState(false);
+  const [serverError, setServerError] = React.useState(''); // State for server error message
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -78,36 +75,31 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
     setOpen(false);
   };
 
+ 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault(); // Prevents form submission refresh
+    event.preventDefault();
 
     if (emailError || passwordError) {
-      return; // Exits early if there are errors
+      return;
     }
 
     const data = new FormData(event.currentTarget);
-    const email = String(data.get('email') || ''); // Ensures a string type
+    const email = String(data.get('email') || '');
     const password = String(data.get('password') || '');
 
-    console.log({
-      email,
-      password,
-    });
-
     try {
-      const response = await login({
-        email,
-        password,
-      });
+      const response = await login({ email, password });
       console.log('Logged in user:', response);
-      if(response.token){
-        navigate("/home")
+      if (response.token) {
+        navigate("/home");
       }
     } catch (error) {
-      console.error(error); // The global handler logs detailed info
+      const axiosError = error as AxiosError; // Type assertion
+      const message = (axiosError.response?.data as ErrorResponse)?.message || 'An unknown error occurred.';
+      console.log("Error 2", axiosError);
+      setServerError(message);
     }
   };
-
 
   const validateInputs = () => {
     const email = document.getElementById('email') as HTMLInputElement;
@@ -198,17 +190,22 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
                 type="password"
                 id="password"
                 autoComplete="current-password"
-                autoFocus
                 required
                 fullWidth
                 variant="outlined"
                 color={passwordError ? 'error' : 'primary'}
               />
             </FormControl>
+            {serverError && ( // Conditionally render the error message
+              <Typography color="error" sx={{ textAlign: 'center' }}>
+                {serverError}
+              </Typography>
+            )}
             <FormControlLabel
               control={<Checkbox value="remember" color="primary" />}
               label="Remember me"
             />
+
             <ForgotPassword open={open} handleClose={handleClose} />
             <Button
               type="submit"
@@ -218,6 +215,7 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
             >
               Sign in
             </Button>
+
             <Typography sx={{ textAlign: 'center' }}>
               Don&apos;t have an account?{' '}
               <span>
@@ -231,7 +229,6 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
               </span>
             </Typography>
           </Box>
-
         </Card>
       </SignInContainer>
     </>

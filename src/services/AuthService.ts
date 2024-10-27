@@ -1,24 +1,5 @@
 import httpClient from "./HttpClient";
-
-interface LoginData {
-    email: string;
-    password: string;
-}
-
-interface SignupData {
-    name: string;
-    email: string;
-    password: string;
-}
-
-interface AuthResponse {
-    token: string;
-    // user: {
-    //     id: string;
-    //     name: string;
-    //     email: string;
-    // };
-}
+import { LoginData, SignupData, AuthResponse } from "../types/types";
 
 // Login Service
 export const login = async (data: LoginData): Promise<AuthResponse> => {
