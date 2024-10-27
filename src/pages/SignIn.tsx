@@ -65,7 +65,7 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
   const [passwordError, setPasswordError] = React.useState(false);
   const [passwordErrorMessage, setPasswordErrorMessage] = React.useState('');
   const [open, setOpen] = React.useState(false);
-  const [serverError, setServerError] = React.useState(''); // State for server error message
+  const [serverError, setServerError] = React.useState('');
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -75,7 +75,7 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
     setOpen(false);
   };
 
- 
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -116,9 +116,9 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
       setEmailErrorMessage('');
     }
 
-    if (!password.value || password.value.length < 6) {
+    if (!password.value || password.value.length < 8) {
       setPasswordError(true);
-      setPasswordErrorMessage('Password must be at least 6 characters long.');
+      setPasswordErrorMessage('Password must be at least 8 characters long.');
       isValid = false;
     } else {
       setPasswordError(false);
@@ -219,13 +219,13 @@ export default function SignIn(props: { disableCustomTheme?: boolean }) {
             <Typography sx={{ textAlign: 'center' }}>
               Don&apos;t have an account?{' '}
               <span>
-                <Link
-                  href="/sign-up/"
-                  variant="body2"
+                <Button
+                  variant="text" //
+                  onClick={() => navigate('/sign-up/')}
                   sx={{ alignSelf: 'center' }}
                 >
                   Sign up
-                </Link>
+                </Button>
               </span>
             </Typography>
           </Box>

@@ -1,4 +1,6 @@
 import * as React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { AxiosError } from 'axios';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Checkbox from '@mui/material/Checkbox';
@@ -13,8 +15,9 @@ import Stack from '@mui/material/Stack';
 import MuiCard from '@mui/material/Card';
 import { styled } from '@mui/material/styles';
 
+import { ErrorResponse } from '../types/types';
 
-import { useNavigate } from 'react-router-dom';
+import { signup } from '../services/AuthService';
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: 'flex',
@@ -59,12 +62,16 @@ const SignUpContainer = styled(Stack)(({ theme }) => ({
 }));
 
 export default function SignUp(props: { disableCustomTheme?: boolean }) {
+
+  const navigate = useNavigate();
+
   const [emailError, setEmailError] = React.useState(false);
   const [emailErrorMessage, setEmailErrorMessage] = React.useState('');
   const [passwordError, setPasswordError] = React.useState(false);
   const [passwordErrorMessage, setPasswordErrorMessage] = React.useState('');
   const [nameError, setNameError] = React.useState(false);
   const [nameErrorMessage, setNameErrorMessage] = React.useState('');
+  const [serverError, setServerError] = React.useState('');
 
   const validateInputs = () => {
     const email = document.getElementById('email') as HTMLInputElement;
@@ -82,9 +89,11 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
       setEmailErrorMessage('');
     }
 
-    if (!password.value || password.value.length < 8) {
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
+    if (!password.value || password.value.length < 8 || !passwordRegex.test(password.value)) {
       setPasswordError(true);
-      setPasswordErrorMessage('Password must be at least 8 characters long.');
+      setPasswordErrorMessage('Password must be at least 8 characters long, and include at least one letter, one number, and one special character.');
       isValid = false;
     } else {
       setPasswordError(false);
@@ -103,18 +112,31 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
     return isValid;
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+
+    event.preventDefault();
+
     if (nameError || emailError || passwordError) {
-      event.preventDefault();
       return;
     }
+
     const data = new FormData(event.currentTarget);
-    console.log({
-      name: data.get('name'),
-      lastName: data.get('lastName'),
-      email: data.get('email'),
-      password: data.get('password'),
-    });
+    const email = String(data.get('email') || '');
+    const password = String(data.get('password') || '');
+    const name = String(data.get('name') || '');
+
+    try {
+      const response = await signup({ name, email, password });
+      if (response.token) {
+        navigate("/home");
+      }
+    } catch (error) {
+      const axiosError = error as AxiosError;
+      console.log("Error 2", axiosError.response?.data);
+      const message = (axiosError.response?.data as ErrorResponse)?.message;
+      setServerError(message);
+    }
+
   };
 
   return (
@@ -136,7 +158,6 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
             sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
           >
             <FormControl>
-              <FormLabel htmlFor="name">Full name</FormLabel>
               <TextField
                 autoComplete="name"
                 name="name"
@@ -150,7 +171,6 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
               />
             </FormControl>
             <FormControl>
-              <FormLabel htmlFor="email">Email</FormLabel>
               <TextField
                 required
                 fullWidth
@@ -165,7 +185,6 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
               />
             </FormControl>
             <FormControl>
-              <FormLabel htmlFor="password">Password</FormLabel>
               <TextField
                 required
                 fullWidth
@@ -192,20 +211,25 @@ export default function SignUp(props: { disableCustomTheme?: boolean }) {
             >
               Sign up
             </Button>
+            {serverError && (
+              <Typography color="error" sx={{ textAlign: 'center' }}>
+                {serverError}
+              </Typography>
+            )}
             <Typography sx={{ textAlign: 'center' }}>
               Already have an account?{' '}
               <span>
-                <Link
-                  href="/"
-                  variant="body2"
+                <Button
+                  variant="text" 
+                  onClick={() => navigate('/')}
                   sx={{ alignSelf: 'center' }}
                 >
                   Sign in
-                </Link>
+                </Button>
               </span>
             </Typography>
           </Box>
-      
+
         </Card>
       </SignUpContainer>
     </>
